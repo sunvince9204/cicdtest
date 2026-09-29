@@ -20,14 +20,20 @@ jobs:
         run: |
           python -m pytest -q
 
-      - name: Build and push
+      - name: Build image
+        run: docker build -f app/Dockerfile -t myapp:latest .
+
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USER }}
           DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
-        run: |
-          docker build -f app/Dockerfile -t myapp:latest .
-          echo "${{ secrets.DOCKER_PASS }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
-          docker push myapp:latest
+        run: echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+
+      - name: Push image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: docker push myapp:latest
 
       - name: Deploy to production
-        run: ./deploy.sh prod
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: bash app/deploy.sh prod
