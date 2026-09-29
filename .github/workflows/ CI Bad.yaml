@@ -16,4 +16,4 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Deploy to staging
-        run: ./deploy.sh staging
+        run: bash app/deploy.sh staging
